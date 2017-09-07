@@ -7,6 +7,8 @@ from scipy.stats import chi2_contingency
 CSV_FILE_PATH = "../menu.csv"
 menu_df = pd.read_csv(CSV_FILE_PATH)
 
+# Similar to R's 'summary' function
+print(menu_df.describe())
 
 def chisq_of_df_cols(df, c1, c2):
     groupsizes = df.groupby([c1, c2]).size()
