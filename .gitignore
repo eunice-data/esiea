@@ -1,1 +1,5 @@
 .vscode/temp.sql
+.DS_Store
+.vscode/tags
+.RData
+.Rhistory
