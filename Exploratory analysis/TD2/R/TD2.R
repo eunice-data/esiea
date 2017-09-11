@@ -5,5 +5,3 @@ dataP <- read.csv(csv_1_path, sep=";")
 dataP
 
 barplot(t(dataP[, -1]), beside =T, names = dataP$Task, col = c("lightblue", "mistyrose","lightcyan", "lavender"), legend = colnames(dataP [,2:5]))
-
-dataP
