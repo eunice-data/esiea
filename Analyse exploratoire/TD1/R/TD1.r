@@ -1,90 +1,145 @@
-# Load the menu csv as a dataframe.
-csv_file_path <- "esiea/Analyse exploratoire/TD1/data/menu.csv"
-df <- as.data.frame(read.csv(csv_file_path))
+mcdo_df <- read.csv("~/esiea/Analyse exploratoire/TD1/data/menu.csv")
+summary(mcdo_df)
 
-summary(df)
+cor(mcdo_df$Calories, mcdo_df$Total.Fat) # On calcule la corrélation entre les deux variables.
 
-# Compute the Chi square test for Calories and Total Fat.
-print(chisq.test(df$Calories,
-                 df$Total.Fat))
+cor_of_df <- function(df, fields_of_interest) {
+  "
+  Function that computes the correlation for each couple of columns in a dataframe
+  and returns a matrix containing the results.
+  
+  The computation takes into account the fact that the matrix is symmetrical, and
+  that a correlation on the same vectors is 1.
+  "
+  n <- length(fields_of_interest)
+  
+  # Initializing the matrix containing the chi square values.
+  cor_matrix <- matrix(1,
+                       ncol = n,
+                       nrow = n,
+                       dimnames = list(fields_of_interest, fields_of_interest))
+  
+  # Computing the Chi square values, and using the symmetry of the matrix.
+  for (i in 1:(n - 1)) {
+    for (j in (i + 1):n) {
+      temp_cor <- cor(df[, fields_of_interest[i]],
+                      df[, fields_of_interest[j]])
+      
+      cor_matrix[i, j] <- temp_cor
+      cor_matrix[j, i] <- temp_cor
+    }
+  }
+  
+  return(cor_matrix)
+}
+
 
 # Name of the variables we are interested in computing the Chi square test.
 fields_of_interest <- c("Calories", "Total.Fat",
                         "Cholesterol", "Sodium", "Sugars", "Protein")
 
-n <- length(fields_of_interest)
+# Compute the chi square matrix.
+(correlation_data_frame <- cor_of_df(mcdo_df[fields_of_interest], fields_of_interest))
 
-function(df, fields_of_interest) {
+
+# Same, but after scaling
+(correlation_scaled_data_frame <- cor_of_df(scale(mcdo_df[fields_of_interest]), fields_of_interest))
+
+
+# Difference between the two
+correlation_data_frame - correlation_scaled_data_frame
+
+correlation_data_frame>0.5
+
+shapiro_of_df <- function(df, fields_of_interest) {
+  "
+  Function that computes the shapiro test's p value for each couple of columns in a dataframe
+  and returns a matrix containing the results.
+  
+  The computation takes into account the fact that the matrix is symmetrical, and
+  that a correlation on the same vectors is 1.
+  "
   n <- length(fields_of_interest)
   
   # Initializing the matrix containing the chi square values.
-  chi2_matrix <- matrix(0, ncol = n, nrow = n, dimnames = list(fields_of_interest, fields_of_interest))
+  shapiro_array <- rep(NA, n)
   
   # Computing the Chi square values, and using the symmetry of the matrix.
-  for (i in 1:(length(fields_of_interest) - 1)) {
-    for (j in (i + 1):length(fields_of_interest)) {
-      chi2 <- chisq.test(df[, fields_of_interest[i]],
-                         df[, fields_of_interest[j]])$statistic
-      
-      chi2_matrix[i, j] <- chi2
-      chi2_matrix[j, i] <- chi2
-    }
+  for (i in 1:n) {
+    shapiro_array[i] <- shapiro.test(df[, fields_of_interest[i]])$p.value
   }
   
-  return chi2_matrix
+  return(shapiro_array)
 }
 
-# Initializing the matrix containing the chi square values.
-chi2_matrix <- matrix(0, ncol = n, nrow = n, dimnames = list(fields_of_interest, fields_of_interest))
-
-
-
-print(chi2_matrix)
-
-corr_matrix <- round(cor(menu_df[, fields_of_interest]), 2)
-print(corr_matrix > 0.5)
-print(corr_matrix)
-
-corr_matrix <- round(cor(scale(menu_df[, fields_of_interest])), 2)
-print(corr_matrix > 0.5)
-print(corr_matrix)
+(shapiro_of_df(mcdo_df, fields_of_interest)<0.05)
 
 library(rgl)
-plot3d(menu_df$Calories, menu_df$Total.Fat, menu_df$Cholesterol, type ="s")
-# We can see that all but 'Sugars' are correlated (with r>0,5)
-
 
 list <- c("Calories", "Total.Fat", "Cholesterol")
-menu_df.cr <- scale(menu_df[, list])
-lims <- c(min(menu_df.cr) , max(menu_df.cr))
-plot3d(menu_df.cr, type="s", xlim=lims, ylim=lims, zlim=lims )
 
+plot3d(mcdo_df$Calories,
+       mcdo_df$Total.Fat,
+       mcdo_df$Cholesterol,
+       type="s")
 
-menu_df.cr_df <- as.data.frame(menu_df.cr)
-plot3d(menu_df.cr, type="s", xlim=lims, ylim=lims,zlim=lims)
-plot3d(ellipse3d(cor(cbind(menu_df.cr_df$Calories, menu_df.cr_df$Total.Fat, menu_df.cr_df$Cholesterol))), col="grey", add = TRUE)
+interesting_df <- scale(mcdo_df[, c("Calories", "Total.Fat", "Cholesterol")])
 
-list <- c("Sodium", "Sugars", "Protein")
-menu_df.cr <- scale(menu_df[, list])
-lims <- c(min(menu_df.cr) , max(menu_df.cr))
-menu_df.cr_df <- as.data.frame(menu_df.cr)
-plot3d(menu_df.cr, type="s", xlim=lims, ylim=lims,zlim=lims)
-plot3d(ellipse3d(cor(cbind(menu_df.cr_df$Sodium, menu_df.cr_df$Sugars, menu_df.cr_df$Protein))), col="grey", add = TRUE)
+lims <- c(min(interesting_df),
+          max(interesting_df))
+
+plot3d(interesting_df,
+       type = "s")
+
+plot3d(ellipse3d(cor(cbind(interesting_df$Calories,
+                           interesting_df$Total.Fat,
+                           interesting_df$Cholesterol))),
+                           col="grey",
+                          add=TRUE)
 
 library(ade4)
-
 list <- c("Calories", "Total.Fat", "Cholesterol")
-acp <- dudi.pca(menu_df[, list], center=TRUE, scale = TRUE, scannf = FALSE , nf = 3)
+(acp <- dudi.pca(scale(mcdo_df[, list]),
+                 center=FALSE,
+                 scale=FALSE,
+                 scannf = FALSE,
+                 nf = 3))
+
 names(acp)
-acp$tab
 
 
-(pve <- 100*acp$eig/sum(acp$eig))
-pve <- 100*acp$eig/sum(acp$eig)
+pve <- 100 * acp$eig / sum(acp$eig) # On calcule le pourcentage d'intertie de chaque vecteur propre.
 cumsum(pve)
 
-# 15: 100% pour 3 axes
-inertie <- inertia.dudi(acp , col.inertia = TRUE)
-inertie
-round ( acp$co ,2)
-s.corcircle(acp$co , xax =1 , yax =2)
+(inertie <-inertia.dudi(acp, col.inertia=TRUE))
+
+round(acp$co ,2)
+s.corcircle(acp$co,
+            xax=1,
+            yax=2)
+
+
+s.label(acp$li,
+        xax = 1,
+        yax = 2,
+        label=as.character(mcdo_df$Item),
+        clabel=1.5)
+
+gcol <- c("red1", "red4","orange")
+s.class(dfxy = acp$li, fac = mcdo_df$Category, col = gcol, xax =
+          1, yax = 2)
+
+scatter(acp)
+
+list <- c("Calories", "Total.Fat", "Cholesterol", "Sodium", "Sugars", "Protein")
+(acp <- dudi.pca(scale(mcdo_df[, list]),
+                 center=FALSE,
+                 scale=FALSE,
+                 scannf = FALSE,
+                 nf = 3))
+(inertie <-inertia.dudi(acp, col.inertia=TRUE))
+
+round(acp$co ,2)
+s.corcircle(acp$co,
+            xax=1,
+            yax=2)
