@@ -7,4 +7,5 @@ Feel free to contribute.
 
 ## Content
 
-- Analyse exploratoire (Exploratory analysis)
+- Analyse exploratoire
+- Machine learning
