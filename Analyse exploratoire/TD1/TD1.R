@@ -1,4 +1,4 @@
-mcdo_df <- read.csv("~/esiea/Analyse exploratoire/TD1/data/menu.csv")
+mcdo_df <- read.csv("~/esiea/Analyse exploratoire/TD1/menu.csv")
 summary(mcdo_df)
 
 cor(mcdo_df$Calories, mcdo_df$Total.Fat) # On calcule la corrélation entre les deux variables.

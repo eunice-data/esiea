@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import chi2_contingency
 
 # Importing the csv and loading it in a dataframe.
-CSV_FILE_PATH = "~/esiea/Analyse exploratoire/TD1/data/menu.csv"
+CSV_FILE_PATH = "~/esiea/Analyse exploratoire/TD1/menu.csv"
 MENU_DF = pd.read_csv(CSV_FILE_PATH)
 
 # Similar to R's 'summary' function
